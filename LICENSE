@@ -1,0 +1,46 @@
+# kriya Console — License
+
+Copyright 2026 Governex. All rights reserved.
+
+The kriya Console's source code is proprietary and is not published. This repository
+distributes the compiled application (signed, notarized macOS builds under **Releases**),
+its documentation, and verifiable sample artifacts. The Console is built on the
+open-source [kriya runtime](https://github.com/governex/kriya), which is and
+remains MIT-licensed.
+
+## Application license (the DMG)
+
+Subject to these terms, you are granted a non-exclusive, non-transferable license to
+download, install, and use the kriya Console application:
+
+- **Free tier** — free for any internal use, personal or commercial, with no account
+  and no time limit.
+- **Paid features** unlock with an offline, Ed25519-signed license token supplied under
+  a separate commercial agreement.
+
+You may not: redistribute modified builds; remove or alter code signatures, notices, or
+license gates; sublicense, rent, or resell the software; or use the software or its
+outputs to build a product or service that competes with kriya Console. Reverse
+engineering is not permitted except to the extent a right to do so is granted by
+applicable law and cannot be contractually waived.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY ARISING FROM THE USE OF THE SOFTWARE.
+
+## Documentation and samples in this repository
+
+The documentation and sample artifacts here may be read, downloaded, and shared
+unmodified for the purpose of evaluating or verifying kriya. Evidence samples
+demonstrate verifiability; they are not certifications and may not be represented
+as such.
+
+## Prior versions
+
+Console versions up to and including v0.3.4 were previously published under the
+Functional Source License, Version 1.1, ALv2 Future License (FSL-1.1-ALv2). That
+license continues to govern copies of those versions obtained while it was in effect,
+including its conversion of each such release to Apache-2.0 two years after that
+release's date. From the next release onward, all distribution is governed solely by
+the terms above.
