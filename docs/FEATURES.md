@@ -7,7 +7,7 @@ your own server — there is no vendor cloud to trust.
 
 Status labels, used honestly:
 
-- ✅ **Shipped** — in the current notarized DMG (v0.4.0).
+- ✅ **Shipped** — in the current notarized DMG (v0.5.0).
 - 🟢 **Merged** — built, tested, and merged on `main`; ships in the next DMG.
 - 🧭 **Roadmap** — not built; we don't sell it.
 
@@ -57,7 +57,34 @@ Every ✅/🟢 claim traces to a test, a signed sample, or a public release —
   *"Evidence posture — counts from verified receipts. Not a risk score."* No composite score
   exists anywhere. A `success:false` action reads "did not complete", never "blocked". Charts are
   hand-rolled SVG, zero new dependencies; Spend gains a 30-day **Trend** and Local Models gain
-  per-model **p50/p95 latency** the same release.
+  per-model **p50/p95 latency** the same release. *(New in v0.5.0)*: a fourth tab, **Topology** —
+  agents → servers/tools → destinations & models folded from verified receipts, denies marked
+  typographically, with the boundary stated on the map: *"governed lanes only — see Coverage for
+  what isn't recorded."*
+- **Sessions Timeline** ⭐ *(new in v0.5.0)* — each run's actions on a time axis with **real
+  measured durations**: the hook lane times a call across its pre/post processes, the
+  gateway/model lanes measure in-process, and the receipt carries two additive optional params.
+  A bar renders only where a receipt recorded a duration; everything else is an honest instant
+  marker — absent is shown, never invented.
+- **Annotation receipts** ⭐ *(new in v0.5.0)* — attach a **signed human label** to any past
+  verified action: Correct / Incorrect / Needs review / Unsafe — a closed set with **no free
+  text anywhere** (a note would carry content). The latest label wins; every prior label stays
+  signed in its own chain. The Audit log gains an **Annotated** lens; annotating a receipt that
+  doesn't verify is refused, never signed.
+- **Config-change evidence** ⭐ *(new in v0.5.0)* — Memory shows, per config surface (CLAUDE.md,
+  settings, registered MCP memory), whether the device's **behavior baseline shifted within 48 h
+  after each change** — worded as it is: *"shifted N h after this change (advisory)"* —
+  correlation, never causation.
+- **Evidence MCP server** ⭐ *(new in v0.5.0)* — `kriya-mcp --evidence`: your agent queries its
+  own verified history (searches, chain checks, session trees, spend) through five read-only
+  tools. Every answer comes **only from receipts that pass verification**; a tampered line is
+  excluded and counted, never surfaced. The reader's own start is a signed receipt.
+- **Verify it yourself, three ways** ⭐ *(new in v0.5.0)* — a per-lane **self-verifying HTML
+  export** (opens in any browser, airplane mode), the `kriya-audit` CLI one-liners, and a raw
+  3-command **OpenSSL recipe** needing only the public key — documented in
+  [`VERIFY-OFFLINE.md`](VERIFY-OFFLINE.md) and executed in CI against a real signed fixture.
+  Plus a **Grafana panel plugin** that re-verifies kriya-exported OTel spans in the dashboard's
+  own browser: VERIFIED / BAD-SIG / NOT-A-KRIYA-SPAN.
 
 ## 2 · Control what agents may do — ✅ free
 

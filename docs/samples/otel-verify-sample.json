@@ -1,0 +1,254 @@
+{
+  "resourceSpans": [
+    {
+      "resource": {},
+      "scopeSpans": [
+        {
+          "scope": {},
+          "spans": [
+            {
+              "traceId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "spanId": "s1",
+              "name": "claude-code__bash",
+              "attributes": [
+                {
+                  "key": "gen_ai.operation.name",
+                  "value": {
+                    "stringValue": "execute_tool"
+                  }
+                },
+                {
+                  "key": "gen_ai.tool.name",
+                  "value": {
+                    "stringValue": "claude-code__bash"
+                  }
+                },
+                {
+                  "key": "gen_ai.tool.call.id",
+                  "value": {
+                    "stringValue": "s1"
+                  }
+                },
+                {
+                  "key": "kriya.receipt.id",
+                  "value": {
+                    "stringValue": "s1"
+                  }
+                },
+                {
+                  "key": "kriya.action.id",
+                  "value": {
+                    "stringValue": "claude-code__bash"
+                  }
+                },
+                {
+                  "key": "kriya.receipt.sig",
+                  "value": {
+                    "stringValue": "rFXaJzlzDogztRODpu/CboHTPtowBjGAb8Z1vmdQP8h5GJYXls18xIZ4MfUJ/IM8Kj8//t6DXD5YMGvlYxYuCA=="
+                  }
+                },
+                {
+                  "key": "kriya.receipt.raw",
+                  "value": {
+                    "stringValue": "eyJzdGVwX2lkIjoiczEiLCJhY3Rpb25faWQiOiJjbGF1ZGUtY29kZV9fYmFzaCIsInBhcmFtcyI6e30sInN1Y2Nlc3MiOnRydWUsInRzX21zIjoxMDAwLCJhY3RvciI6eyJhZ2VudCI6ImNsYXVkZS1jb2RlIiwidXNlciI6InNhbmRlZXAifSwicHVibGljX2tleSI6IjVjOWM2ZGYyNjFjOWNiODQwNDc1Nzc2YWFlZmNkOTQ0YjQwNTMyOGZhYjI4ZjliM2E5NWVmNDA0OTBkM2RlODQiLCJzaWduYXR1cmUiOiJhYzU1ZGEyNzM5NzMwZTg4MzNiNTEzODNhNmVmYzI2ZTgxZDMzZWRhMzAwNjMxODA2ZmM2NzViZTY3NTAzZmM4NzkxODk2MTc5NmNkN2NjNDg2NzgzMWY1MDlmYzgzM2MyYTNmM2ZmZWRlODM1YzNlNTgzMDZiZTU2MzE2MmUwOCJ9"
+                  }
+                },
+                {
+                  "key": "kriya.schema.version",
+                  "value": {
+                    "stringValue": "1"
+                  }
+                },
+                {
+                  "key": "kriya.chain.head",
+                  "value": {
+                    "stringValue": "30f757ea6e6c99caf5bae683a97bf637743830beebad66c7e333fcaedcc79265"
+                  }
+                },
+                {
+                  "key": "gen_ai.agent.name",
+                  "value": {
+                    "stringValue": "claude-code"
+                  }
+                },
+                {
+                  "key": "kriya.actor.user",
+                  "value": {
+                    "stringValue": "sandeep"
+                  }
+                }
+              ],
+              "status": {
+                "code": "STATUS_CODE_OK"
+              }
+            },
+            {
+              "traceId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "spanId": "s2",
+              "name": "kriya.io.egress.http.allow",
+              "attributes": [
+                {
+                  "key": "gen_ai.operation.name",
+                  "value": {
+                    "stringValue": "execute_tool"
+                  }
+                },
+                {
+                  "key": "gen_ai.tool.name",
+                  "value": {
+                    "stringValue": "kriya.io.egress.http.allow"
+                  }
+                },
+                {
+                  "key": "gen_ai.tool.call.id",
+                  "value": {
+                    "stringValue": "s2"
+                  }
+                },
+                {
+                  "key": "kriya.receipt.id",
+                  "value": {
+                    "stringValue": "s2"
+                  }
+                },
+                {
+                  "key": "kriya.action.id",
+                  "value": {
+                    "stringValue": "kriya.io.egress.http.allow"
+                  }
+                },
+                {
+                  "key": "kriya.receipt.sig",
+                  "value": {
+                    "stringValue": "2NbydiFG5bzEGGOCrpdS8dEEBEMJoQM3RN4GG4qoruT5smlvbySlPgIukVLQUwa9cPVmS2s2PZ6OSk+EJlYNAQ=="
+                  }
+                },
+                {
+                  "key": "kriya.receipt.raw",
+                  "value": {
+                    "stringValue": "eyJzdGVwX2lkIjoiczIiLCJhY3Rpb25faWQiOiJrcml5YS5pby5lZ3Jlc3MuaHR0cC5hbGxvdyIsInBhcmFtcyI6e30sInN1Y2Nlc3MiOnRydWUsInRzX21zIjoxMDAwLCJhY3RvciI6eyJhZ2VudCI6ImNsYXVkZS1jb2RlIiwidXNlciI6InNhbmRlZXAifSwicHJldl9oYXNoIjoiMzBmNzU3ZWE2ZTZjOTljYWY1YmFlNjgzYTk3YmY2Mzc3NDM4MzBiZWViYWQ2NmM3ZTMzM2ZjYWVkY2M3OTI2NSIsInB1YmxpY19rZXkiOiI1YzljNmRmMjYxYzljYjg0MDQ3NTc3NmFhZWZjZDk0NGI0MDUzMjhmYWIyOGY5YjNhOTVlZjQwNDkwZDNkZTg0Iiwic2lnbmF0dXJlIjoiZDhkNmYyNzYyMTQ2ZTViY2M0MTg2MzgyYWU5NzUyZjFkMTA0MDQ0MzA5YTEwMzM3NDRkZTA2MWI4YWE4YWVlNGY5YjI2OTZmNmYyNGE1M2UwMjJlOTE1MmQwNTMwNmJkNzBmNTY2NGI2YjM2M2Q5ZThlNGE0Zjg0MjY1NjBkMDEifQ=="
+                  }
+                },
+                {
+                  "key": "kriya.schema.version",
+                  "value": {
+                    "stringValue": "1"
+                  }
+                },
+                {
+                  "key": "kriya.chain.head",
+                  "value": {
+                    "stringValue": "97036eac9b4488d6a352672b7cb99455af44d587a5954591313a028cd4f12415"
+                  }
+                },
+                {
+                  "key": "kriya.chain.prev_hash",
+                  "value": {
+                    "stringValue": "30f757ea6e6c99caf5bae683a97bf637743830beebad66c7e333fcaedcc79265"
+                  }
+                },
+                {
+                  "key": "gen_ai.agent.name",
+                  "value": {
+                    "stringValue": "claude-code"
+                  }
+                },
+                {
+                  "key": "kriya.actor.user",
+                  "value": {
+                    "stringValue": "sandeep"
+                  }
+                }
+              ],
+              "status": {
+                "code": "STATUS_CODE_OK"
+              }
+            },
+            {
+              "traceId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "spanId": "s3",
+              "name": "claude-code__read",
+              "attributes": [
+                {
+                  "key": "gen_ai.operation.name",
+                  "value": {
+                    "stringValue": "execute_tool"
+                  }
+                },
+                {
+                  "key": "gen_ai.tool.name",
+                  "value": {
+                    "stringValue": "claude-code__read"
+                  }
+                },
+                {
+                  "key": "gen_ai.tool.call.id",
+                  "value": {
+                    "stringValue": "s3"
+                  }
+                },
+                {
+                  "key": "kriya.receipt.id",
+                  "value": {
+                    "stringValue": "s3"
+                  }
+                },
+                {
+                  "key": "kriya.action.id",
+                  "value": {
+                    "stringValue": "claude-code__read"
+                  }
+                },
+                {
+                  "key": "kriya.receipt.sig",
+                  "value": {
+                    "stringValue": "N65uBFSc7m/M1v3ugOdhKuadA7prx34OqMI4dEVTKen3jvmIjQZRT+6orPaKCqoRsCuxSppAx9JIn9jeBofVCw=="
+                  }
+                },
+                {
+                  "key": "kriya.receipt.raw",
+                  "value": {
+                    "stringValue": "eyJzdGVwX2lkIjoiczMiLCJhY3Rpb25faWQiOiJjbGF1ZGUtY29kZV9fcmVhZCIsInBhcmFtcyI6e30sInN1Y2Nlc3MiOnRydWUsInRzX21zIjoxMDAwLCJhY3RvciI6eyJhZ2VudCI6ImNsYXVkZS1jb2RlIiwidXNlciI6InNhbmRlZXAifSwicHJldl9oYXNoIjoiOTcwMzZlYWM5YjQ0ODhkNmEzNTI2NzJiN2NiOTk0NTVhZjQ0ZDU4N2E1OTU0NTkxMzEzYTAyOGNkNGYxMjQxNSIsInB1YmxpY19rZXkiOiI1YzljNmRmMjYxYzljYjg0MDQ3NTc3NmFhZWZjZDk0NGI0MDUzMjhmYWIyOGY5YjNhOTVlZjQwNDkwZDNkZTg0Iiwic2lnbmF0dXJlIjoiMzdhZTZlMDQ1NDljZWU2ZmNjZDZmZGVlODBlNzYxMmFlNjlkMDNiYTZiYzc3ZTBlYThjMjM4NzQ0NTUzMjllOWY3OGVmOTg4OGQwNjUxNGZlZWE4YWNmNjhhMGFhYTExYjAyYmIxNGE5YTQwYzdkMjQ4OWZkOGRlMDY4N2Q1MGIifQ=="
+                  }
+                },
+                {
+                  "key": "kriya.schema.version",
+                  "value": {
+                    "stringValue": "1"
+                  }
+                },
+                {
+                  "key": "kriya.chain.head",
+                  "value": {
+                    "stringValue": "7aa04fc149ad00463037a37664d1f2918e64c1ffa4b79fa6fc12f8e7381f8f68"
+                  }
+                },
+                {
+                  "key": "kriya.chain.prev_hash",
+                  "value": {
+                    "stringValue": "97036eac9b4488d6a352672b7cb99455af44d587a5954591313a028cd4f12415"
+                  }
+                },
+                {
+                  "key": "gen_ai.agent.name",
+                  "value": {
+                    "stringValue": "claude-code"
+                  }
+                },
+                {
+                  "key": "kriya.actor.user",
+                  "value": {
+                    "stringValue": "sandeep"
+                  }
+                }
+              ],
+              "status": {
+                "code": "STATUS_CODE_OK"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

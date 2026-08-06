@@ -3,6 +3,53 @@
 All notable changes to the Console and the `kriyad` control plane. Dates are release dates of the
 signed, notarized macOS DMG unless noted.
 
+## v0.5.0 — 2026-08-06 — The observability wave: see more, verify more
+
+See more of what your agents do — and let anyone verify more of it — without a single new trust
+assumption.
+
+**New in the app:**
+
+- **Sessions Timeline** — per-action durations captured in both lanes (the hook's identity-keyed
+  pre→post marker; the gateway/llm-proxy measured in-process) as two **additive optional** params
+  (`kriya.dur.ms`, `kriya.dur.basis`); each run renders as a waterfall — a bar only where a
+  receipt carries a real measured duration, an instant marker where it doesn't. **Absent is
+  shown, never invented.** Exported OTel spans gain real timing the same way.
+- **Analytics › Topology** — agents → servers/tools → destinations & models, folded from verified
+  receipts in range; edge weight = count, denies marked **typographically** (never color); node
+  click → counts, top actions, recent receipts, view-in-Audit. The map states its own boundary:
+  *"governed lanes only — see Coverage for what isn't recorded."*
+- **Annotation receipts** — `kriya.annotation.set`: attach a signed human label to any past
+  verified action. The label set is a **closed enum** (correct · incorrect · needs-review ·
+  unsafe) with **no free text anywhere**; the latest label wins and every prior label stays
+  signed in its own hash chain. Audit gains an **Annotated** lens; the receipt drawer gains an
+  **Annotate** row. Speaks the pre-stable OTel GenAI evaluation vocabulary
+  (`gen_ai.evaluation.*`, evaluator = human).
+- **Config-change evidence** — Memory joins config-class writes (CLAUDE.md, settings, registered
+  MCP memory) with behavior-baseline shifts recorded within a disclosed 48h window after:
+  *"behavior baseline shifted N h after this change (advisory)"* — correlation, **never
+  causation**, and "device-wide" is spelled out when a shift can't be tied to the writing agent.
+- **Evidence MCP server** — `kriya-mcp --evidence`: five read-only tools over the local audit
+  store (`receipts_search` · `receipt_get` · `chain_verify` · `session_tree` · `spend_summary`).
+  Every answer is computed **only from receipts that pass verification** — a tampered line is
+  counted and excluded, never surfaced. The reader's own boot is a signed receipt. Connections
+  gains the card + a copy-paste `mcp.json` wiring it through the governed lane.
+- **The verify-it-yourself ladder** — `docs/VERIFY-OFFLINE.md`: a self-verifying HTML page (any
+  browser, airplane mode), `kriya-audit` one-liners, and a raw 3-command OpenSSL recipe from the
+  public key alone (the recipe is executed in CI against a real signed fixture). Evidence gains a
+  per-lane **self-verifying HTML export** (complete-chain-gated — a scoped subset would show a
+  false chain break, so scoped exports route to the CLI ladder). Plus a **Grafana panel plugin**
+  (`tools/grafana-kriya-verify/`) that re-verifies kriya-exported OTel spans in the dashboard's
+  own browser — VERIFIED / BAD-SIG / NOT-A-KRIYA-SPAN, three-way parity-tested against the CLI
+  and the app verifier.
+- **Remote approvals, step 1** — the pager decision core: which tiers page, the redacted payload
+  format, Settings › **Notifications**, and the Approvals delivery row. The outbound transport
+  deliberately did **not** ship: an egress client in the free build would break the
+  dormancy-tested *"opens no network connection"* guarantee — the send lane is parked on a
+  recorded decision, and the UI says so honestly.
+
+All additive: no schema change, no new trust assumption — old receipts verify byte-unchanged.
+
 ## v0.4.0 — 2026-08-06 — Payments, shift reports, the governed launcher, and Analytics
 
 The v0.4.0 wave: govern the money, govern the night, start governed — and read your own reliability

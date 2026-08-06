@@ -11,15 +11,17 @@ verify, offline and without trusting us, is every receipt it produces ([license]
 > proof of what they did.** Everything runs on your device or your own server. Nothing goes to
 > our cloud, because we don't have one.
 
-**Current release: v0.4.0** — signed + notarized macOS app: **agent payment governance** (the
-`payment` gate is a primary enforced dial; every governed payment a signed, content-free
-**intent → approval → transaction** chain — honest amounts, never a card number), **shift
-reports** (signed unattended-window evidence + heartbeat gaps, with an armed fail-closed clamp on
-the hook lane), a **governed run launcher** (`kriya-run` composes a pack + lanes + agent and signs
-one launch attestation before the agent starts), and a new **Analytics** view (reliability,
-governance-native SLOs, and a posture panel that is deliberately *not* a risk score) — on top of
-v0.3.4's **Today** landing view, **action gates**, and **policy packs**.
-[Download the latest DMG](https://github.com/governex/kriya-console/releases/tag/v0.4.0) ·
+**Current release: v0.5.0** — signed + notarized macOS app: the **Sessions Timeline** (real
+measured per-action durations — a bar only where a receipt carries one, absent shown, never
+invented), **Analytics › Topology** (agents → tools → destinations, denies marked, governed-lanes
+boundary stated), **annotation receipts** (signed human labels over past actions — a closed set,
+no free text: the HITL eval seed), **config-change evidence** (config writes joined with
+behavior-baseline shifts — advisory, never causal), an **evidence MCP server** (your agent
+queries its own verified history, read-only, answers only from receipts that verify), and a
+**verify-it-yourself ladder** (self-verifying HTML · offline CLI · a raw OpenSSL recipe · a
+Grafana panel that re-verifies signatures in-dashboard) — on top of v0.4.0's payment governance,
+shift reports, governed run launcher, and Analytics.
+[Download the latest DMG](https://github.com/governex/kriya-console/releases/tag/v0.5.0) ·
 [kriyanative.com](https://kriyanative.com)
 
 ---
@@ -235,7 +237,10 @@ verified receipts                    mTLS · verifies all ingest               f
 Three design laws hold everywhere:
 
 1. **Verify, don't trust.** Every claim on every screen traces to a signed artifact re-verified
-   locally. `npm test` proves the TypeScript verifier and the Rust signer agree byte-for-byte.
+   locally. `npm test` proves the TypeScript verifier and the Rust signer agree byte-for-byte, and
+   [`docs/VERIFY-OFFLINE.md`](docs/VERIFY-OFFLINE.md) shows three ways to re-check the receipts
+   yourself, offline — a self-verifying HTML page (no install), the `kriya-audit` CLI, or raw
+   OpenSSL with only the public key.
 2. **The server authors nothing.** Evidence is signed by devices, policy by the operator's org
    key. `kriyad` holds neither key — it can withhold, never invent, and withholding is caught.
 3. **Your data stays yours.** Free tier: nothing leaves the machine, ever. Fleet tier: minimized
