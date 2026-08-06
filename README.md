@@ -11,14 +11,15 @@ verify, offline and without trusting us, is every receipt it produces ([license]
 > proof of what they did.** Everything runs on your device or your own server. Nothing goes to
 > our cloud, because we don't have one.
 
-**Current release: v0.3.4** — signed + notarized macOS app: the new **Today** landing view (your
-agents' day as verified headlines — deploys, publishes, releases, denies — noise rolled up),
-**action gates** (seven high-stakes classes — deploys, destructive git, publishes, prod DB, infra,
-sends, agent self-modification — enforced pre-execution in the Claude Code hook lane, every
-decision a signed `kriya.gate.*` receipt), and **policy packs** (Developer / Analyst / Planner
-presets, applied in one click and receipted) — on top of v0.3.3's **memory receipts**, **temporal
-policy conditions**, and **behavior baselines**.
-[Download the latest DMG](https://github.com/governex/kriya-console/releases/tag/v0.3.4) ·
+**Current release: v0.4.0** — signed + notarized macOS app: **agent payment governance** (the
+`payment` gate is a primary enforced dial; every governed payment a signed, content-free
+**intent → approval → transaction** chain — honest amounts, never a card number), **shift
+reports** (signed unattended-window evidence + heartbeat gaps, with an armed fail-closed clamp on
+the hook lane), a **governed run launcher** (`kriya-run` composes a pack + lanes + agent and signs
+one launch attestation before the agent starts), and a new **Analytics** view (reliability,
+governance-native SLOs, and a posture panel that is deliberately *not* a risk score) — on top of
+v0.3.4's **Today** landing view, **action gates**, and **policy packs**.
+[Download the latest DMG](https://github.com/governex/kriya-console/releases/tag/v0.4.0) ·
 [kriyanative.com](https://kriyanative.com)
 
 ---
@@ -46,10 +47,10 @@ side as a signed, tamper-evident receipt you can re-verify yourself, offline.**
   actions rolled up, plus a live signature-checked view of every action. Edited or faked entries
   show up red.
 - **Control** — you write the rules: *allow this, ask a human for that, never allow those.* The
-  open runtime enforces them. **Action gates** put the eight highest-stakes classes (deploys,
-  destructive git, publishes, prod DB, infra, sends, self-modification — payments next) each
-  behind Allow / Receipt / Approve / Deny; **packs** apply a whole persona's posture in one
-  receipted click. Runaway agents hit rate and budget caps.
+  open runtime enforces them. **Action gates** put the highest-stakes classes (deploys,
+  destructive git, publishes, prod DB, infra, sends, self-modification, and — new in v0.4.0 —
+  **payments**) each behind Allow / Receipt / Approve / Deny; **packs** apply a whole persona's
+  posture in one receipted click. Runaway agents hit rate and budget caps.
 - **Approve** — dangerous actions (deleting things, moving money) pause until a person says yes.
   Who approved, and why, becomes part of the permanent record.
 - **Prove** — one click turns the verified record into compliance evidence (CMMC/NIST 800-171,
@@ -92,6 +93,7 @@ proof: [`docs/FEATURE-PROOF.md`](docs/FEATURE-PROOF.md). Release history:
 | **Sessions** | Agent work grouped into run trees — a session, its subagents, and every tool call underneath, with the lineage drawn from signed receipts rather than guessed from timestamps. |
 | **Verified Replay** ⭐ *(new in v0.3.2)* | Step through a past session **re-derived from its signed receipts alone** — no tool call, no model call, nothing re-run. If a receipt fails verification or a chain breaks, the whole derivation refuses rather than render a plausible-looking partial. Missing fields show as visible gaps, never invented values. |
 | **Memory** ⭐ *(new in v0.3.3)* | What your agents wrote into their own persistent memory — `CLAUDE.md`, the Claude memory dir, `.claude/settings*.json`, registered MCP memory tools — as signed, **hash-only** receipts. Flags when a run that wrote to memory also read from a source you've classed as untrusted. |
+| **Analytics** ⭐ *(new in v0.4.0)* | The aggregate read of your own verified receipts — reliability (actions, success rate, deny/hold split, top-failing tools), governance-native **SLOs** (approval-latency p50/p95, verification pass rate, heartbeat gaps, budget headroom), and a week-over-week **posture** panel. Every number is a count or a threshold; there is **no composite risk score** — the panel says so verbatim. A `success:false` action reads *"did not complete,"* never *"blocked."* View-side only: nothing new is signed. |
 
 ### 2. Control what agents are allowed to do
 
@@ -102,6 +104,8 @@ proof: [`docs/FEATURE-PROOF.md`](docs/FEATURE-PROOF.md). Release history:
 | **Budgets & rate caps** | A runaway agent stops at the cap, not at your data. Per-app, per-agent, per-operator usage against limits, visible at all times. |
 | **Identity & access** | Who ran what — per human operator and per agent — computed only from verified receipts. Console roles: admin / approver / operator / viewer. |
 | **Local model governance** *(new in v0.3.2)* | Point Ollama / llama.cpp / vLLM / LM Studio clients at `kriya-llm-proxy` and every completion gets a receipt — which model digest served it, token counts, prompt and output hashes — and policy can gate on approved model identity. Governs the clients you point at the proxy; a direct connection to the model port stays invisible, and the Coverage Map says so. |
+| **Payment governance** ⭐ *(new in v0.4.0)* | The `payment` gate is now a **primary enforced dial** (Allow / Receipt / Approve / Deny): a payment-shaped call on the governed Claude Code hook lane produces a signed, content-free **intent → approval → transaction** chain — merchant host and a best-effort amount (honest *unknown* when it can't be read cleanly, never a guess), **no card number ever in a receipt** (custody stays with credential brokering). A new Spend › **Purchases** tab lists each governed payment; approvals show the amount against your cap. Enforced on the hook lane only — never sold as PCI or DLP. |
+| **Shift reports** ⭐ *(new in v0.4.0)* | Sign a report of what a governed agent did across an **unattended window** — plus honest **gaps** wherever the heartbeat went quiet. Arm a shift and the hook lane runs a **fail-closed clamp**: a missed heartbeat inside the window tightens the tier (an otherwise-allowed action holds or is denied), each decision itself a signed receipt. Tighten-only, and inert when disarmed. |
 
 ### 3. Wire it up without pain
 
@@ -110,6 +114,7 @@ proof: [`docs/FEATURE-PROOF.md`](docs/FEATURE-PROOF.md). Release history:
 | **Govern All** | One button: detect the agents on this Mac and wire hooks + gateway + policy for all of them. Reversible. |
 | **Connections** | Add and manage governed MCP servers without hand-editing JSON config files; walks you through macOS permissions. |
 | **Broad agent coverage** | Claude Code (native hook — every tool call, including subagents and headless runs), Hermes, any MCP server via the zero-change gateway, and no-API desktop apps via computer-use. Vendor-neutral by design. |
+| **Governed run launcher** ⭐ *(new in v0.4.0)* | Start › **New governed run** composes an agent + a policy pack + the lanes you want into a single `kriya-run …` command and signs one launch attestation before the agent starts — so a run's pack is on the record from the first byte. Copy-first: it records how the run was launched; per-call governance still flows through the agent's hook. |
 
 ### 4. Prove it to an auditor *(paid tier)*
 
@@ -300,8 +305,8 @@ design-partner engagements today (not self-serve yet) — pricing and contact at
 
 Teams where *"an agent did something"* is not an acceptable answer — they must **prove what it
 did and constrain what it can do**. Sharpest fit: organizations that legally can't ship agent
-activity to a cloud dashboard (defense/CMMC, sovereign, air-gapped). **CMMC Level 2 enters new
-DoD contracts Nov 10, 2026** — kriya installs where a cloud governance product structurally can't.
+activity to a cloud dashboard (defense/CMMC, sovereign, air-gapped) — kriya installs where a
+cloud governance product structurally can't.
 
 ## Relationship to the open runtime
 

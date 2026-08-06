@@ -7,7 +7,7 @@ your own server — there is no vendor cloud to trust.
 
 Status labels, used honestly:
 
-- ✅ **Shipped** — in the current notarized DMG (v0.3.4).
+- ✅ **Shipped** — in the current notarized DMG (v0.4.0).
 - 🟢 **Merged** — built, tested, and merged on `main`; ships in the next DMG.
 - 🧭 **Roadmap** — not built; we don't sell it.
 
@@ -49,6 +49,16 @@ Every ✅/🟢 claim traces to a test, a signed sample, or a public release —
   line — rather than render a plausible-looking partial. Every field carries a FULL/ABSENT fidelity
   class, so a gap is something you see, never something the derivation invents.
 
+- **Analytics** ⭐ *(new in v0.4.0)* — the aggregate read of your own verified receipts, three
+  tabs: **Reliability** (actions, success rate, deny/hold split, denies/day + failures/day charts,
+  top-failing tools, per-agent trends — everything deep-links into the Audit log), **SLOs**
+  (approval latency p50/p95 per gate class, verification pass rate, deny rate, budget headroom,
+  heartbeat gaps), and **Posture** — week-over-week threshold crossings, captioned verbatim:
+  *"Evidence posture — counts from verified receipts. Not a risk score."* No composite score
+  exists anywhere. A `success:false` action reads "did not complete", never "blocked". Charts are
+  hand-rolled SVG, zero new dependencies; Spend gains a 30-day **Trend** and Local Models gain
+  per-model **p50/p95 latency** the same release.
+
 ## 2 · Control what agents may do — ✅ free
 
 - **Policy** — ordered *allow / require-approval / deny* rules with live preview and linting. The
@@ -64,14 +74,30 @@ Every ✅/🟢 claim traces to a test, a signed sample, or a public release —
   Tiers: Allow / Receipt-only / Approve / Deny. **Enforced pre-execution in the Claude Code hook
   lane** as a tighten-only escalation — a gate can never loosen a rule your policy already denies;
   receipts from other lanes are classified and displayed, not blocked, and the UI says so. Every
-  decision is a signed `kriya.gate.*` receipt. The payments card is a disabled preview until
-  payment governance ships.
+  decision is a signed `kriya.gate.*` receipt. **Payments** joined as an eighth, fully-enforced
+  class in v0.4.0 — see *Agent payment governance* below.
 - **Policy packs** ⭐ *(new in v0.3.4)* — **Developer** (build freely; blast-radius steps need a
   human), **Analyst** (no side effects leave the machine; egress locked), **Planner** (draft
   everything, execute nothing). A pack is a named, versioned preset over the gates applied to the
   device in one click — and the application itself is a signed receipt. Duplicate-then-edit for
   custom packs; per-identity assignment is recorded for the launcher and fleet rollout to consume
   (one policy file per device today, and the UI says exactly that).
+- **Agent payment governance** ⭐ *(new in v0.4.0)* — the `payment` gate class is a primary
+  enforced dial: a payment-shaped call on the governed Claude Code hook lane produces a signed,
+  **content-free** `kriya.pay.{intent,decision,outcome}` chain — the merchant host and a
+  best-effort amount (an unreadable amount reads **"unknown", never a guess**), the decision
+  against your per-txn cap and day spend, and the real outcome. A denied payment closes all three
+  links synchronously; a held one stays the honest 2-of-3 shape until a human decides. A card
+  number **never enters a receipt** — custody stays with credential brokering. Spend gains a
+  **Purchases** tab; payment approvals show the amount against your cap. Enforced on the governed
+  hook lane only — never sold as PCI or DLP.
+- **Shift reports** ⭐ *(new in v0.4.0)* — declare an unattended window (default 22:00–07:00) and
+  the Console composes a signed, chain-linked report of what the governed agent did across it —
+  with a signed `kriya.attest.shift.gap` receipt for every heartbeat gap, **visible by absence,
+  never smoothed over**. Arm the shift and the hook lane runs a **fail-closed clamp**: a missed
+  beat inside the window tightens the action tier, each clamp its own signed receipt.
+  Tighten-only; inert when disarmed. Honest scope: measurement of the governed record, not a
+  promise nothing happened off-lane.
 - **Test before apply** — replay a policy edit over this device's own re-verified receipts before
   applying it: *"this change would have changed N of last week's M actions — here they are."* Works
   on the single device and as the fleet pre-publish gate. Scope stated in the UI: the action-tier
@@ -94,6 +120,11 @@ Every ✅/🟢 claim traces to a test, a signed sample, or a public release —
   Idempotent and reversible — un-govern restores every config byte-for-byte.
 - **Connections** — add governed MCP servers without hand-editing JSON; walks you through macOS
   permissions.
+- **Governed run launcher** ⭐ *(new in v0.4.0)* — Start › **New governed run** composes an agent +
+  policy pack + lanes into one `kriya-run …` command; the open runtime's bin signs a single
+  `kriya.run.launched` attestation (content-free — never argv or cwd), then starts the agent.
+  Copy-first: a launcher, not a second enforcement path; per-call governance stays in the agent's
+  own hook. Sessions run cards gain a `pack:` chip.
 - **Broad coverage** — Claude Code (native hook: every tool call, including subagents and headless
   runs), Hermes, the VS-Code-family and CLI MCP clients above via the gateway, any MCP server via
   the zero-change gateway, and no-API desktop apps via computer-use. Vendor-neutral by design.

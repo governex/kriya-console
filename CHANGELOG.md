@@ -3,6 +3,59 @@
 All notable changes to the Console and the `kriyad` control plane. Dates are release dates of the
 signed, notarized macOS DMG unless noted.
 
+## v0.4.0 — 2026-08-06 — Payments, shift reports, the governed launcher, and Analytics
+
+The v0.4.0 wave: govern the money, govern the night, start governed — and read your own reliability
+from your own verified receipts.
+
+**New in the app:**
+
+- **Agent payment governance** — the `payment` gate class is promoted from view-only preview to a
+  **primary enforced dial** (Allow / Receipt-only / Approve / Deny). A payment-shaped call on the
+  governed Claude Code hook lane produces a signed, **content-free**
+  `kriya.pay.{intent,decision,outcome}` chain — the intent (merchant host + a best-effort amount),
+  the policy decision against your per-txn cap and day spend, and the real outcome. A denied
+  payment closes the full 3-link chain synchronously; a held one is the honest 2/3 shape until a
+  human decides. Amounts are honest: an unparseable amount reads **"unknown", never a guess**. A
+  card number **never enters a receipt** — custody stays with credential brokering. New Spend ›
+  **Purchases** tab (merchant · amount · decision · I→D→O ✓-steps → receipt drawer); payment
+  approvals show the amount against your cap; Today's spend card counts purchases and holds.
+- **Shift reports** — sign a report of what a governed agent did across a declared **unattended
+  window** (default 22:00–07:00), plus a signed `kriya.attest.shift.gap` receipt for every
+  heartbeat gap — **visible by absence, never smoothed over**. Arm a shift and the hook lane runs
+  a **fail-closed clamp**: a missed heartbeat inside the window tightens the action tier
+  (approval-hold or deny), each clamp its own signed receipt. Tighten-only; inert when disarmed.
+  New Compliance › **Shift reports** view + the Today Overnight-shift card.
+- **Governed run launcher** — Start › **New governed run** composes an agent (Claude Code, Cursor
+  CLI, headless SDK, cron) + a policy pack + the lanes you want into a single `kriya-run …`
+  command; the runtime bin signs one `kriya.run.launched` attestation (content-free: agent, pack,
+  lanes, shift — never argv or cwd), then execs the agent. Copy-first: it records how the run was
+  launched; per-call governance still flows through the agent's own hook. Sessions run cards gain
+  a `pack:` chip when a launch started the run.
+- **Analytics** — a new Monitor view over your own verified receipts, three tabs:
+  **Reliability** (actions, success rate, deny/hold split, denies/day + failures/day charts,
+  top-failing tools, per-agent trends, error facets — every element deep-links into the Audit
+  log), **SLOs** (approval latency p50/p95 per gate class paired from held→decision receipts,
+  verification pass rate, deny rate, budget headroom, heartbeat gaps), and **Posture**
+  (week-over-week threshold crossings, captioned verbatim: *"Evidence posture — counts from
+  verified receipts. Not a risk score."*). **No composite score exists anywhere** — that's the
+  point.
+- **Charts** — the Console's first chart layer: hand-rolled SVG, zero new dependencies. Spend
+  gains a 30-day **Trend** (priced spend/day + tokens/day); Local Models gain per-model
+  **p50/p95 latency** ("no latency data" when the receipts carry none — never a fabricated 0 ms).
+
+**Honest scope, as always:**
+
+- Payment enforcement runs **where the pre-execution hook runs** (the Claude Code lane); other
+  lanes are observed. Never sold as PCI or DLP.
+- The shift report is **measurement of the governed record, not a promise nothing happened
+  off-lane** — and it says so in the UI.
+- `kriya-run` is a launcher, **not a second enforcement path**.
+- Analytics failure counts render "did not complete", never "blocked" — deny wording stays
+  reserved for explicit enforcement receipts.
+- Every new receipt vocabulary is additive + optional on the frozen envelope: **old receipts
+  verify byte-unchanged**, and TS↔Rust parity fixtures lock each format.
+
 ## v0.3.4 — 2026-07-30 — Today, action gates, and packs
 
 The R30 wave: open the app and see what your agents did — and gate the actions that matter.
