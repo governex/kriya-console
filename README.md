@@ -28,7 +28,7 @@ shift reports, governed run launcher, and Analytics.
 
 ## The problem
 
-You let an AI agent loose on your laptop — Claude Code, Hermes, an MCP server, a desktop app.
+You let an AI agent loose on your laptop — Claude Code, Hermes, an MCP server.
 It edits files, calls APIs, spends money, talks to the internet. Then someone asks a simple
 question:
 
@@ -114,15 +114,15 @@ proof: [`docs/FEATURE-PROOF.md`](docs/FEATURE-PROOF.md). Release history:
 | Feature | In plain terms |
 |---|---|
 | **Govern All** | One button: detect the agents on this Mac and wire hooks + gateway + policy for all of them. Reversible. |
-| **Connections** | Add and manage governed MCP servers without hand-editing JSON config files; walks you through macOS permissions. |
-| **Broad agent coverage** | Claude Code (native hook — every tool call, including subagents and headless runs), Hermes, any MCP server via the zero-change gateway, and no-API desktop apps via computer-use. Vendor-neutral by design. |
+| **Connections** | Add and manage governed MCP servers without hand-editing JSON config files. |
+| **Broad agent coverage** | Claude Code (native hook — every tool call, including subagents and headless runs), Hermes, and any MCP server via the zero-change gateway. Vendor-neutral by design. No-API desktop apps are *not* governed — the desktop-reach lanes were removed 2026-08-07, and the Coverage Map shows that gap honestly. |
 | **Governed run launcher** ⭐ *(new in v0.4.0)* | Start › **New governed run** composes an agent + a policy pack + the lanes you want into a single `kriya-run …` command and signs one launch attestation before the agent starts — so a run's pack is on the record from the first byte. Copy-first: it records how the run was launched; per-call governance still flows through the agent's hook. |
 
 ### 4. Prove it to an auditor *(paid tier)*
 
 | Feature | In plain terms |
 |---|---|
-| **Evidence export** | Controls across 6 frameworks — NIST 800-171 / CMMC L2 (AU 3.3.1–3.3.9), SOC 2, **ISO/IEC 42001 + CSA AICM** *(new in v0.3.2)*, EU AI Act, data-residency. Every control's status is **computed from re-verified receipts**, never typed in. Gaps are shown, not hidden — the ISO 42001 pack caps every Annex A row at *partial* and names eight controls kriya cannot evidence at all. Markdown + JSON, plus an AI-CAIQ support sheet. |
+| **Evidence export** | 51 mapped controls across 8 frameworks — NIST 800-171 / CMMC L2 (AU 3.3.1–3.3.9 + AC/CM/SI egress rows), NIST 800-53 (AC-4, SI-4), SOC 2, **ISO/IEC 42001 + CSA AICM** *(new in v0.3.2)*, EU AI Act, DORA, data-residency. (The NIST 800-53 and DORA rows appear only when the trail carries governed egress receipts.) Every control's status is **computed from re-verified receipts**, never typed in. Gaps are shown, not hidden — the ISO 42001 pack caps every Annex A row at *partial* and names eight controls kriya cannot evidence at all. Markdown + JSON, plus an AI-CAIQ support sheet. |
 | **Auditor CLI** (`kriya-audit`, free) | *Don't trust us — check.* A standalone offline tool any assessor can run to re-prove the receipts, the fleet envelopes, and a server read-back. Exit 0 or exit 1. v0.3.2 adds five more verifiers: `--verify-replay`, `--verify-otel`, `--verify-artifact`, `--verify-bundle`, `--verify-exec`. |
 | **Fleet correlation (this machine)** | One posture number per Mac: verified vs failed, signers seen, share of actions under policy. |
 
@@ -221,8 +221,8 @@ your machines are on the current signed policy bundle.)*
 ```
 your agents                 the open kriya runtime (MIT)                 kriya Console (this app)
 Claude Code · Hermes        every action:                                re-verifies every receipt
-MCP servers · desktop  ──▶  policy → approval → budget → Ed25519-  ──▶   on-device · authors policy
-apps                        signed, hash-chained receipt                 approvals · evidence export
+MCP servers            ──▶  policy → approval → budget → Ed25519-  ──▶   on-device · authors policy
+                            signed, hash-chained receipt                 approvals · evidence export
 ```
 
 And for a fleet:
@@ -287,7 +287,7 @@ canonical:
 | Temporal policy conditions | ✅ | ✅ |
 | Behavior baselines | ✅ | ✅ |
 | Auditor CLI (all six verifiers) | ✅ | ✅ |
-| Evidence export (6 frameworks) | — | ✅ |
+| Evidence export (8 frameworks, 51 mapped controls) | — | ✅ |
 | Fleet cockpit + `kriyad` control plane | — | ✅ (`fleet-console`) |
 | Fleet OTel export + `/metrics` + Grafana | — | ✅ (`fleet-console`) |
 
@@ -325,4 +325,4 @@ receipts.*
 ---
 
 Enterprise & regulated deployments → [kriyanative.com](https://kriyanative.com) ·
-**Sandeepshekhar26@gmail.com**
+**kriyanative@gmail.com**

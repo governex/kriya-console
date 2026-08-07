@@ -3,6 +3,27 @@
 All notable changes to the Console and the `kriyad` control plane. Dates are release dates of the
 signed, notarized macOS DMG unless noted.
 
+## Unreleased
+
+**Removed — the desktop-reach integration (D1, 2026-08-07).** The reach-in / computer-use / router
+desktop fronts are gone from the runtime (the library refocused on govern/audit), and every Console
+surface that drove them goes with them:
+
+- **Connections** loses the "Govern a desktop app" connector and its macOS-permission steps; the
+  Govern All surface no longer lists a desktop-apps target (and with it the `needs-permission`
+  state, which nothing else produced).
+- **Settings** loses the Permissions pane (Accessibility / Screen Recording existed only for the
+  desktop fronts); **Get Started** drops the permission step — setup is now two required steps.
+- **Coverage Map**: the desktop-apps lane is NOT deleted — it stays on the map as an honest,
+  permanent gap: *"Desktop apps — not governed. The desktop-reach lanes were removed 2026-08-07;
+  agent desktop activity outside governed channels is not recorded."* Always grey, never green.
+  Legacy desktop-reach chain files from older installs remain valid signed history in Audit, but
+  no longer light any coverage lane.
+- The bundled `kriya-gateway` sidecar is built without the `reach-in`/`computer-use`/`router`
+  features (proxy/broker only).
+
+Last shipped in v0.5.0; ships with the next cut. Existing receipts verify byte-unchanged.
+
 ## v0.5.0 — 2026-08-06 — The observability wave: see more, verify more
 
 See more of what your agents do — and let anyone verify more of it — without a single new trust

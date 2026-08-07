@@ -1070,6 +1070,148 @@ an `npm test` run succeeded this session. Read the scope before treating it as m
   must never be assumed to range over the same receipts — the simulation report says so explicitly
   whenever a temporal section is present.
 
+## Payment governance (F-4) — a decision-and-report chain, never proof that money moved
+
+When a governed call matches a `payment`-class action gate, the hook signs the standard
+`kriya.gate.payment.*` receipts **plus** a three-link purchase chain — `kriya.pay.intent` (what the
+agent asked) → `kriya.pay.decision` (what the gate decided) → `kriya.pay.outcome` (what the tool
+reported) — sharing one `pay_id` derived deterministically from the call itself (session id + tool
+name + canonical input), so the separate pre- and post-execution hook processes chain without any
+shared state. Read the boundaries before treating a purchase row as a bank record:
+
+- **Governed channels only.** A payment the agent makes outside a governed channel — a raw shell
+  command, an ungoverned MCP server's own network calls — produces **no receipt and no chain**. This
+  is the same governed-lane boundary as every other claim in this document; the Coverage Map's grey
+  lanes name it.
+- **The honest-amount rule: an integer or nothing.** An amount enters a receipt only in the one
+  unambiguous shape — a non-negative **integer** `amount` in minor units plus a non-empty `currency`
+  string (the PaymentIntent-style shape). A float, a missing or empty currency, a negative, or an
+  absent amount yields `amount_known: false` and **no number at all** — the Console renders
+  "unknown," never a scaled guess. Extraction is best-effort **from the call's own shape**; a
+  payment tool with an unrecognized parameter shape is honestly unpriced, not creatively parsed.
+- **The chain proves the gate and the report — never settlement.** `intent → decision → outcome`
+  proves what the agent asked, what the policy decided (`approved | held | denied`, the matched rule,
+  and the human approver when one granted it), and what the governed lane's tool response reported
+  back (`executed | denied | timed_out`, plus a status field only when the tool surfaced one —
+  absent otherwise, never invented). It does **not** prove money actually moved: the outcome's
+  source is the tool's own response, not a processor or bank statement. Reconciling against the
+  processor's records is the reader's job; this chain is the evidence to reconcile *against*.
+- **Denied and held are honest shapes, not gaps.** A denied payment's outcome is written at the
+  decision point — the call never reaches the destination. A held payment awaiting a human is an
+  intent + decision with no outcome yet, surfaced as a 2-of-3-link chain, never padded to look
+  complete. A chain is marked verified only when every present link passes the same offline
+  verification as every other receipt.
+- **No PAN, no card data, ever.** `merchant` is a processor/host string only — the MCP server name,
+  or the parsed host of a URL-bearing tool call; it is never extracted from a shell command. Custody
+  of real payment credentials stays in the EG-B credential-brokering lane (its own section above,
+  its own threat model); the payment chain is a witness record and holds no secret at any point.
+
+## Annotation receipts (O-7) — who labeled what, never whether the label is right
+
+An operator can attach a signed label to a past governed action: the Console signs a
+`kriya.annotation.set` receipt into its own hash chain (`annotations.jsonl`, its own signing key),
+verified by the same spine as every other receipt. Read what an annotation is before citing one:
+
+- **It proves who labeled what, and when — never that the label is *correct*.** An annotation is a
+  recorded human judgement over evidence, not a quality verdict about the action, and nothing in
+  this build scores, aggregates, or adjudicates the labels.
+- **The label set is closed.** `correct | incorrect | needs-review | unsafe` — four values, no free
+  text anywhere in the receipt (a notes field would carry content). The optional `rubric_id` is a
+  rubric *name*, never rubric content. An unknown label is rejected at the signer, never minted as
+  new vocabulary.
+- **Only evidence that verifies is annotatable.** Before signing, the backend re-verifies that the
+  target `step_id` exists as a **verified** receipt in the audit dir — an absent or tampered target
+  is rejected with an error, never silently annotated. And labels do not label labels: the receipt
+  drawer never offers the Annotate row on an annotation receipt itself.
+- **Latest wins; history stays.** Re-labeling appends a new receipt; the resolution reads the latest
+  verified label per target, and the full labeling history is preserved by the append-only chain —
+  never rewritten. An annotation that itself fails verification attributes nothing.
+- **The annotator is the local operator identity, not an authenticated one.** The receipt's actor is
+  the device's OS username at signing time — the same self-reported operator identity every receipt
+  in this document carries, not an SSO/OIDC-authenticated principal; whoever operates this device's
+  Console signs as that user. Signing is desktop-only, in the Console's compiled backend — the
+  browser/TS lane holds no annotation key and signs nothing.
+
+## Analytics (O-1 · O-4 · O-5 · O-12) — re-derivable counts over verified receipts, never a score
+
+Monitor › Analytics (Reliability, SLOs, Topology, Posture) renders **only** numbers you can
+re-derive yourself from the verified receipts in the selected range — counts, rates, and latencies.
+Read the derivation rules before quoting a number from these views:
+
+- **No composite risk score exists — anywhere, by design.** The posture panel is week-over-week
+  threshold *crossings*, each a plain count with its own one-line note, under a fixed caption the
+  tests assert verbatim: *"Evidence posture — counts from verified receipts. Not a risk score."*
+  Nothing weights, scales, or blends the rows into an index.
+- **Unverifiable rows are never data points.** Every Analytics fold counts only rows that pass
+  verification. A line that fails stays visible in the Audit view (the tamper story) and is itself
+  surfaced honestly — as the SLO verification pass-rate's `unverifiable` count and the posture
+  panel's "Unverifiable receipts" row — excluded from the aggregates, never hidden.
+- **"Did not complete" is not "blocked."** A receipt with `success: false` is rendered *"did not
+  complete,"* never *"blocked"* — a policy deny and a runtime failure are indistinguishable on the
+  plain action receipt. Enforcement verbs are reserved for explicit deny/hold receipts, classified
+  in exactly one shared place, so a failure count is never dressed up as an enforcement count.
+- **Approval latency pairs by `corr_step`, or not at all.** A held→decision latency sample exists
+  only when the two receipts share a `corr_step`; a hold with no linkage is skipped, never joined by
+  guesswork. An open hold counts as **pending** — a queue depth, never a latency sample (an
+  undecided hold has no latency yet) — and the view labels the pending column as exactly that.
+- **Governed-channel evidence only.** The topology map folds governed receipts into agents, tools,
+  destinations, and models, under its own fixed caption: *"This map shows governed lanes only; see
+  Coverage for what isn't recorded."* An event no lane observed is not an edge, not a count, and not
+  a trend — Analytics measures the governed record, never everything the process or the agent did.
+
+## Evidence MCP (O-10) — a read-only reader that answers only from verified receipts
+
+`kriya-mcp --evidence` serves a local, stdio-only MCP server whose five read-only tools
+(`receipts_search`, `receipt_get`, `chain_verify`, `session_tree`, `spend_summary`) let a connected
+agent query its own signed history — "what did I deploy yesterday," "is the chain intact." Read the
+posture before wiring it in:
+
+- **The honesty axiom.** Every answer is computed only from receipts that pass verification against
+  their own embedded public key. A line that fails is **counted and reported** (`unverifiable`),
+  never surfaced as if proven; fetching a tampered line by `step_id` returns
+  `found: true, verified: false` with a reason — never its contents as fact. The store is re-read
+  and re-verified fresh on every tool call, so no stale or tampered-after-load view is ever cached.
+- **Read-only, and not an enforcement path.** There is no executor, no policy engine, no approval
+  gate, no write path, and no network socket in this mode. It is the inverse of the governed
+  gateway: it can tell an agent what its record says; it cannot gate, block, or approve anything.
+- **The reader is itself in evidence.** Before serving, it signs one `kriya.evidence.mcp.start`
+  receipt (scope `read-only` plus the exact tool list) into a dedicated evidence log — the boot is
+  queryable through the very tools it exposes. If its persistent signing key cannot be loaded it
+  falls back to an ephemeral key, disclosed on stderr rather than refusing to start — a read-only
+  reader's availability trade, stated not hidden.
+- **It exposes receipt data to whatever model you connect.** Receipts are content-free by
+  construction (hashes, counts, names — this server adds nothing they don't carry), but their
+  params **are** visible to the connected LLM: action ids, actor identities, timestamps, destination
+  hosts, merchant strings, spend amounts. Connecting a vendor-cloud model places that governance
+  metadata in that model's context — a deliberate operator choice, named here, not a default.
+
+## Governed launcher (F-5) — a launch attestation, not a second enforcement path
+
+`kriya-run --pack <p> [--lane …] [--shift] -- <agent-cmd>` signs one `kriya.run.launched` receipt —
+the launch attestation — and then execs the agent command. Read what that one receipt claims:
+
+- **It proves the composition at launch, nothing after.** The receipt records `{agent, pack, lanes,
+  shift}` — signed by the same runtime Signer, byte-identical to every other receipt — attesting
+  *this agent was started under this pack with these lanes recorded*. It is content-free by
+  construction: never the agent command's argv and never the working directory, both of which can
+  carry paths, flags, or secret-looking values (asserted by test, not convention).
+- **Not a second enforcement path.** Per-call governance still flows through the agent's own hook or
+  gateway, exactly as elsewhere in this document. The `--lane` choices are **recorded intent** in
+  this version — kriya-run does not itself intercept the launched agent's tool calls, and never
+  claims to.
+- **The pack on the receipt is a launch fact, not an enforcement binding.** kriya-run passes the
+  pack and audit-log path to the child through its environment so downstream wiring can read them;
+  whether the runtime hook actually enforced that pack's policy on the calls that followed is B0's
+  `--policy` wiring, receipted separately. The launch receipt never substitutes for it.
+- **Copy-first v1.** The Console composes the exact command; no process is spawned from the Console,
+  and the user pastes it into their own terminal. A user who edits the composed command after copy
+  launches whatever they edited — the attestation covers what `kriya-run` was actually invoked
+  with, not what the Console displayed.
+- **Absence proves nothing.** An agent started without kriya-run produces no launch attestation —
+  same governed-channel boundary as every lane above. And the operator identity on the receipt
+  (`--user`, defaulting to the OS username) is self-reported by the invoker, like every actor field
+  in this document — not an authenticated principal.
+
 ## Why on-device matters here
 
 For local and regulated apps, the audit cannot live in a cloud gateway — the data and the human are

@@ -145,19 +145,20 @@ Every ✅/🟢 claim traces to a test, a signed sample, or a public release —
 - **Govern All** — one button: detect the agents on this Mac (Claude Code, Hermes, **Cursor, Cline,
   GitHub Copilot, Gemini CLI**) and wire hooks + gateway + policy for all of them, one click each.
   Idempotent and reversible — un-govern restores every config byte-for-byte.
-- **Connections** — add governed MCP servers without hand-editing JSON; walks you through macOS
-  permissions.
+- **Connections** — add governed MCP servers without hand-editing JSON.
 - **Governed run launcher** ⭐ *(new in v0.4.0)* — Start › **New governed run** composes an agent +
   policy pack + lanes into one `kriya-run …` command; the open runtime's bin signs a single
   `kriya.run.launched` attestation (content-free — never argv or cwd), then starts the agent.
   Copy-first: a launcher, not a second enforcement path; per-call governance stays in the agent's
   own hook. Sessions run cards gain a `pack:` chip.
 - **Broad coverage** — Claude Code (native hook: every tool call, including subagents and headless
-  runs), Hermes, the VS-Code-family and CLI MCP clients above via the gateway, any MCP server via
-  the zero-change gateway, and no-API desktop apps via computer-use. Vendor-neutral by design.
+  runs), Hermes, the VS-Code-family and CLI MCP clients above via the gateway, and any MCP server
+  via the zero-change gateway. Vendor-neutral by design.
   Honest ceiling where it's shown: for broker-wired clients the *MCP lane* is governed — their
   native built-in tools bypass MCP unless launched under containment, and cloud-executed agents
-  (Cursor background, Copilot's cloud coding agent) are out of scope.
+  (Cursor background, Copilot's cloud coding agent) are out of scope. No-API desktop apps are
+  **not governed**: the desktop-reach lanes (reach-in / computer-use / router) were removed
+  2026-08-07, and the Coverage Map keeps that lane visible as a permanent gap.
 - **In-process agents & CI** (open runtime) — SDK middleware wraps a framework's tool callback
   (LangGraph, OpenAI Agents SDK, CrewAI, Claude Agent SDK — TypeScript + Python) so in-process tool
   calls are gated and receipted with no MCP hop; **`kriya-ci`** runs an agent step in CI under a
@@ -166,9 +167,10 @@ Every ✅/🟢 claim traces to a test, a signed sample, or a public release —
 
 ## 4 · Prove it to an auditor — ✅ paid (CLI free)
 
-- **Evidence export** — controls across 6 frameworks (NIST 800-171 / CMMC L2, SOC 2, ISO 42001,
-  EU AI Act, data-residency, and **ISO/IEC 42001 + CSA AICM** new in v0.3.2). Every control's status
-  is **computed from re-verified receipts**, never typed in. Gaps are shown, not hidden.
+- **Evidence export** — 51 mapped controls across 8 frameworks (NIST 800-171 / CMMC L2, NIST
+  800-53, SOC 2, ISO 42001, **CSA AICM** new in v0.3.2, EU AI Act, DORA, data-residency; the
+  800-53 and DORA rows appear only on trails carrying governed egress receipts). Every control's
+  status is **computed from re-verified receipts**, never typed in. Gaps are shown, not hidden.
 - **ISO 42001 / CSA AICM pack** *(new in v0.3.2)* — maps the verified trail to ISO/IEC 42001 Annex A
   (A.6.2.8, A.6.2.6, A.9.4) and CSA AICM domains, plus an **AI-CAIQ support sheet**. Deliberately
   conservative: every Annex A row is capped at ◐ *partial*, eight controls are listed by name as
@@ -368,7 +370,7 @@ action: what the agent wrote into its **own memory**, and whether it still **beh
 | Behavior baselines | ✅ | ✅ |
 | FIPS + post-quantum build lanes | ✅ | ✅ |
 | Auditor CLI (all six verifiers) | ✅ | ✅ |
-| Evidence export (6 frameworks) | — | ✅ |
+| Evidence export (8 frameworks, 51 mapped controls) | — | ✅ |
 | Fleet cockpit + `kriyad` control plane | — | ✅ |
 | Fleet OTel export + `/metrics` + Grafana | — | ✅ |
 
