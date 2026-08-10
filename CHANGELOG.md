@@ -3,7 +3,64 @@
 All notable changes to the Console and the `kriyad` control plane. Dates are release dates of the
 signed, notarized macOS DMG unless noted.
 
-## Unreleased
+## v0.6.8 — 2026-08-10 — Two binaries, one signed wire (K-Apter 0.1.7)
+
+The first public cut of the **two-binary** model, and the first release since v0.5.0 — the whole
+0.6.x line (0.6.0 → 0.6.7) was developed and tested privately and lands here in one release.
+
+**The shape.** Governance now runs as **K-Apter**, a standalone macOS menu-bar agent installed on
+every device: it wires each detected AI agent, enforces the org policy locally (allow / deny /
+hold-for-approval), shows Approve/Deny in the menu bar, signs a receipt for every action, and pushes
+sealed envelopes. The **Console** is the per-org cockpit *and* the hub — it embeds the aggregator
+in-process, so there is no separate server to stand up. Connect them on the same machine, directly to
+a hub you host, or through the per-tenant connector mailbox at `console.kriyanative.com`
+(verify → buffer → delete on ack). Licensing is an **org licence carrying device seats**, enforced at
+the hub roster; devices carry no licence file and never phone home.
+
+**Added**
+
+- **K-Apter (0.1.7)** — its own signed, notarized `.pkg`; menu-bar approvals with the real command
+  text, live status (you · org · hub · policy version), last-N receipts, agents-on-this-Mac with a
+  *Govern now* button, pair / un-pair, start-at-login. New agents installed *after* setup are
+  detected and governed within 60 s, and announced.
+- **One-paste pairing** — the admin shares a single `kriya1.…` code that carries the hub address and
+  the enrollment code together (checksummed, so a truncated paste is refused, not mis-dialled).
+  Typing a URL and a code separately still works.
+- **Fleet cockpit** — Overview (is my fleet ok?), Devices with roster and seats, org-wide Activity
+  with per-device lenses, one org Policy surface published to the fleet, whole-org Evidence reports.
+  A device scope picker runs through every view.
+- **The connector lane** — device push over bearer tokens, `POST /v1/enroll` with argon2id enrollment
+  codes and seat caps, mailbox ack + delete-after-ack retention, and a TLS+token serve mode for a
+  direct hub without a certificate ceremony.
+- **The cockpit machine pairs itself** — it enrolls its own K-Apter against the hub it already uses;
+  no code to type on the machine that mints them.
+
+**Fixed**
+
+- An already-wired config never picked up a new approval mode, so a machine set up before K-Apter
+  existed kept drawing the `osascript` window forever. It now self-heals on the watch tick, and
+  touches only kriya's own wiring.
+- The policy anti-rollback watermark was global rather than per-org, so a device that had seen a
+  higher version from one org silently refused a new org's policy.
+- A stale `kriyad` could survive a machine wipe, hold the port, and 401 the device with an orphaned
+  token DB. The hub script preflights the port and the reset script stops it.
+- K-Apter hid pending approvals when un-enrolled — enforcement is local, so a machine holding an
+  action now always has UI to answer it.
+- Policy authoring reports its org-wide publish result instead of saying nothing either way.
+
+**Security** — four findings from an enterprise-surface review, each with a regression test:
+
+- The detail-records lane decided which parameters to ship using the envelope *name* allowlist, which
+  admits app actions whose parameters **are** user content (note bodies, transaction detail). Records
+  now carry parameters only for the audited `kriya.*` governance vocabulary; app content stays on the
+  device, as documented.
+- Token authentication ran a memory-hard argon2 verify before any rate limit, and the well-known
+  operator handle exists on every hub — so unauthenticated floods drove unbounded CPU. A
+  pre-authentication throttle now bounds it.
+- `device_label` at enrollment was unvalidated free text stored and shown in the operator roster; it
+  is now length-bounded and stripped of control/markup characters.
+- The device evidence key, pepper and enrollment token were written world-readable and chmod'd
+  afterwards. They are now created `0600` atomically, inside a `0700` directory.
 
 **Removed — the desktop-reach integration (D1, 2026-08-07).** The reach-in / computer-use / router
 desktop fronts are gone from the runtime (the library refocused on govern/audit), and every Console
@@ -22,7 +79,7 @@ surface that drove them goes with them:
 - The bundled `kriya-gateway` sidecar is built without the `reach-in`/`computer-use`/`router`
   features (proxy/broker only).
 
-Last shipped in v0.5.0; ships with the next cut. Existing receipts verify byte-unchanged.
+Last shipped in v0.5.0. Existing receipts verify byte-unchanged.
 
 ## v0.5.0 — 2026-08-06 — The observability wave: see more, verify more
 

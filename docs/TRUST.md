@@ -254,32 +254,96 @@ surface instead of a footnote — the **Coverage Map**:
   time, outcome — no TLS payloads). A GREY lane is the honest statement that nothing would have
   been recorded there at all.
 
-## The three-tier data-boundary promise
+## The data-boundary promise — per lane, not a comforting average
 
-The Console now has three distinct postures — free single-machine use, an enrolled device
-reporting into a fleet, and the fleet cockpit itself — and each carries a different, precisely
-scoped promise about what ever leaves the machine. Stating them side by side, rather than letting
-"nothing leaves the device" quietly become the answer for all three, is the same honesty discipline
-as the Coverage Map above: say exactly what is and isn't true, per state, not a comforting average.
+The Console now spans four distinct postures — free single-machine use, an enrolled device that
+reports over one of **two transport lanes**, and the cockpit that reads the fleet back — and each
+carries a different, precisely scoped promise about what leaves the machine and who, if anyone,
+briefly handles it in transit. Stating them side by side, rather than letting "nothing leaves the
+device" quietly become the answer for all four, is the same honesty discipline as the Coverage Map
+above: say exactly what is and isn't true, per lane, not a comforting average — and, because one of
+these lanes now touches infrastructure kriya operates, say *that* plainly instead of preserving a
+blanket "never kriya" that a hosted connector would make false.
 
-| Tier | Promise | What that means concretely |
+**Two transport lanes exist for an enrolled device**, and the buyer chooses which (or runs both
+across a fleet):
+
+- **L1 · direct** — the device pushes to a hub the **customer runs**: the Console itself acting as
+  an in-process hub on an always-on machine, a self-hosted `kriyad`, or the server-TLS-plus-bearer-
+  token serve mode pointed at the org's own hostname. **No kriya infrastructure is on the path.**
+- **L2 · connector** — the device pushes to a per-tenant **mailbox kriya operates**
+  (`<company-code>.console.kriyanative.com`); the cockpit pulls from that same mailbox, re-verifies
+  every byte locally, and **acks**, after which the mailbox **deletes**. It is a buffer that holds
+  the undelivered tail, not a store — see "The connector cloud (L2)" below for exactly what it can
+  and cannot see.
+
+| Posture | Promise | What that means concretely |
 |---|---|---|
 | **Free / un-enrolled device** | **Machine-level: nothing leaves the device, full stop.** | No fleet connection is configured, so no socket to any server — kriyad or otherwise — is ever opened for audit/evidence purposes. This is unchanged, byte-for-byte, by anything below: the free tier's claim on this page has not been weakened or reinterpreted. |
-| **Enrolled device** (paid `control-plane`) | **Boundary-level: minimized, signed envelopes and the device-info beacon go to the customer's own kriyad — never anywhere else.** | Once an operator points a device at a self-hosted `kriyad` (their box, their VM, their k8s, or an air-gapped enclave — see below), the device signs and sends redaction-minimized evidence envelopes plus the periodic `DeviceInfo` inventory beacon (§7 fields only, see below) to that one server, over mTLS. Raw receipts and raw payload values are never included — see "Honest boundaries" above for what recording even means. This traffic never reaches kriya's infrastructure or any third-party cloud; it terminates at infrastructure the customer alone controls. |
-| **Operator** (paid `fleet-console`, the cockpit) | **Boundary-level: the cockpit pulls from, and publishes policy to, the customer's own kriyad — never kriya's or any vendor's cloud.** | The fleet cockpit view in this same Console app, run in "operator mode," talks only to the customer's self-hosted `kriyad` (the same server enrolled devices report to) to read coverage/evidence and publish org-key-signed policy bundles (shipped in P3; each device re-verifies the org signature before applying). It is the same on-device Console binary, not a hosted dashboard — there is no kriya-operated server in this path at any point. |
+| **Enrolled device — L1 direct** (paid `control-plane`) | **Boundary-level: minimized, signed envelopes and the device-info beacon go to a hub the customer runs — never anywhere else, no kriya infra on the path.** | The device signs and sends redaction-minimized evidence envelopes plus the periodic `DeviceInfo` inventory beacon (§7 fields only, see below) to one server the customer stands up — their Console-as-hub, their `kriyad`, their VM/k8s/air-gapped enclave — over mTLS or server-TLS-with-token. Raw receipts and raw payload values are never included — see "Honest boundaries" above for what recording even means. This traffic never reaches kriya's infrastructure or any third party; it terminates at infrastructure the customer alone controls. |
+| **Enrolled device — L2 connector** (paid `control-plane`) | **Transit-level: the same minimized, signed envelopes pass through a kriya-operated mailbox that verifies, buffers the undelivered tail, and deletes on the operator's ack — kriya can read no content and can never forge.** | For orgs that want connectivity without standing up their own reachable hub, the device pushes the *same* minimized envelopes to a per-tenant mailbox at `<code>.console.kriyanative.com` over public-CA TLS with a device-bound bearer token. The mailbox re-verifies each Ed25519 envelope, holds only the tail the cockpit has not yet pulled, and **deletes each envelope once the cockpit acks it**. An envelope carries no raw receipts and no payload values (identical minimization to L1), so there is no content for the mailbox to read; the Ed25519 signature is the integrity root, so the mailbox — or anyone who steals its bearer token — can connect but can never forge or alter a byte the cockpit will accept. What the mailbox unavoidably handles is disclosed below. |
+| **Operator / cockpit** (paid `fleet-console`) | **Boundary-level: the cockpit reads coverage/evidence from — and publishes org-key-signed policy to — the customer's own hub (L1) or the connector mailbox (L2), re-verifying every byte it pulls; the mailbox holds nothing kriya can read.** | The fleet cockpit is the same on-device Console binary in "operator mode," not a hosted dashboard. Against an L1 hub it talks only to the customer's own server. Against an L2 mailbox it pulls signed envelopes over an operator bearer token, re-verifies each one locally with the same offline verifier this whole document describes, and acks — which is what triggers the mailbox to delete. Policy it publishes is org-key-signed and re-verified device-side before applying; kriya never authors, signs, or can alter it. |
 
-**The through-line, at every tier: kriya (the vendor) never receives your data.** The only thing
-that changes tier-to-tier is whether anything leaves the *device* at all, and if it does, that it
-goes exclusively to infrastructure the customer stands up and controls themselves. There is no
-tier, free or paid, in which evidence or inventory data is sent to a server kriya operates.
+**The through-line, restated honestly per lane — because L2 changes it, and we say so rather than
+keep a promise a hosted connector would break:**
 
-**Why this doesn't undercut the ops story.** Raw receipts and raw payload values stay device-local
-even for an enrolled device — not merely as a courtesy, but because it keeps the customer's own
-`kriyad` store non-sensitive (a backup is one small SQLite file, not a honeypot of raw agent
-payloads) and because it's the posture that survives an employee-privacy review: a regulated buyer
-adopting fleet governance must be able to show they did *not* centralize keystroke-level employee
-activity. Envelope verbosity beyond the minimized default is the customer's own policy dial to set
-on their own server — not something this Console decides for them or defaults to.
+- **Free:** nothing leaves the device. Byte-for-byte unchanged; the free tier's claim on this page
+  has not been weakened or reinterpreted.
+- **L1 direct:** data leaves the device only to a server **you** run. No kriya-operated server is on
+  the path — the pre-connector promise, intact for any org that runs its own hub.
+- **L2 connector:** data passes through a kriya-operated **connector** that verifies, buffers the
+  undelivered tail, and deletes on ack. kriya **can read no content** (a minimized envelope has
+  none) and **can never forge** (Ed25519 is the root and the cockpit re-verifies every byte). This
+  is the one lane on which anything touches kriya-operated infrastructure at all — so we state
+  exactly what it is (a buffer, not a store) and exactly what it sees (next).
+- **The org picks the trade:** L1 = zero kriya infrastructure on the path, at the cost of running a
+  reachable hub; L2 = zero customer infrastructure on the path, at the cost of the undelivered tail
+  transiting a kriya-operated buffer that holds it briefly and reads none of it.
+
+### The connector cloud (L2) — what the mailbox does, does not, and cannot see
+
+The per-tenant mailbox (`console.kriyanative.com`) is *"just a connector — it helps the two pieces
+connect."* That is a verifiable claim, not marketing, because of how little the mailbox is allowed
+to be:
+
+- **Buffer, not store — structurally, on the hosted lane only.** The mailbox deletes every envelope
+  a short grace window after the cockpit acks it; the archive of record is the device's own
+  append-only outbox, which is never truncated. The full history lives on the customer's devices;
+  the mailbox holds only the tail the cockpit has not yet collected. On a customer's own L1 hub this
+  retention sweep is **off** — that hub is the permanent, queryable store — so "kriya's cloud is a
+  buffer" is a property enforced in code on the hosted lane specifically, not a promise about
+  operator behavior.
+- **No content to read.** An envelope is a minimized, signed rollup: allowlisted action ids and
+  counts, chain hashes, the device's public key. No raw receipts, no payload values, no request/
+  response bodies ever enter it (the minimizer forecloses this structurally at every verbosity — see
+  the redaction floor above). The mailbox verifies signatures and buffers bytes; there is no
+  plaintext for it to inspect even if it tried.
+- **Cannot forge.** Every envelope is Ed25519-signed by the device; the cockpit re-verifies each one
+  after pulling it. A mailbox — or an attacker who steals a device's bearer token — can connect and
+  push, but a forged or altered envelope fails verification at the cockpit and is flagged, exactly
+  like a tampered receipt. The transport credential (the bearer token) is deliberately **not** the
+  evidence key: a stolen token can connect, it can never sign.
+- **What it unavoidably handles, disclosed:** any TCP connection reveals the device's **source IP**
+  to the server — the mailbox, like `kriyad`, does **not** persist it to the store (verified in code,
+  the same as the L1 hub); connection **timing** and **volume** are visible to any relay by nature;
+  and **tenant identity** is visible by design (the company-code subdomain is how the wire is
+  routed). None of these is content; all of them are the honest cost of a hosted connector, stated
+  rather than glossed.
+- **Not yet operating.** No hosted tenant is live as of this writing — the connector lane is built
+  and tested, but the production route and the first tenant are gated on the remaining rollout steps
+  (a rehearsed backup+restore, this per-lane disclosure's founder sign-off, and the DNS/edge route).
+  This section describes a capability that ships **before** the first tenant, not one already
+  carrying traffic.
+
+**Why this doesn't undercut the ops story** — and why it makes the L2 claim *stronger*, not weaker.
+Raw receipts and raw payload values stay device-local on every lane — not merely as a courtesy, but
+because it keeps the customer's own hub non-sensitive (a backup is one small SQLite file, not a
+honeypot of raw agent payloads), because it's the posture that survives an employee-privacy review
+(a regulated buyer must be able to show they did *not* centralize keystroke-level activity), and —
+now — because it is exactly what lets the L2 connector be a buffer that reads nothing: there is no
+content in an envelope for a transiting mailbox to see. Envelope verbosity beyond the minimized
+default is the customer's own policy dial on their own hub — never something this Console decides
+for them, and never something the connector lane can widen.
 
 ### What the device-info beacon does — and does not — collect
 
@@ -491,8 +555,11 @@ how the feature is used:
   an operator's work. This sentence is the one to check any downstream export or fleet purpose-field
   against.
 - **Who can read it:** whoever has filesystem access to the device (device-local, the default), or
-  operator/console access to an enrolled fleet's customer-run `kriyad` — never a kriya-operated
-  server, at any tier (see "The three-tier data-boundary promise" above).
+  operator/console access to the customer's own hub (their `kriyad` / Console-as-hub). On the L2
+  connector lane a kriya-operated mailbox **briefly buffers** the minimized envelope in transit —
+  but it can read none of it (there is no content in an envelope), never persists the source IP, and
+  deletes it on the operator's ack; only the customer's own hub and cockpit can actually read the
+  ledger. See "The data-boundary promise — per lane" above for the full per-lane statement.
 - **Retention default:** unset (indefinite) until the operator configures one — see "Retention and
   the chain" below.
 - **Per-device deny counts already reach an enrolled fleet's `kriyad`.** The minimized envelope's
@@ -580,7 +647,7 @@ the `fleet-console` cockpit can export the org's aggregated evidence — pulled 
 itself. Same observed-vs-proven discipline, applied at fleet scope:
 
 - **Envelope granularity, not per-receipt — this is structural, not a policy choice.** `kriyad` only
-  ever holds signed envelope **rollups** (see "The three-tier data-boundary promise" above): raw
+  ever holds signed envelope **rollups** (see "The data-boundary promise — per lane" above): raw
   receipts and per-receipt signatures never leave the originating device. So the fleet export is ONE
   SPAN PER ACCEPTED ENVELOPE — keyed on `kriya.envelope.device_pub` + `kriya.envelope.seq`, signed by
   `kriya.envelope.sig`, chained via `kriya.chain.head`/`prev_envelope_hash` — never a per-receipt
@@ -591,11 +658,13 @@ itself. Same observed-vs-proven discipline, applied at fleet scope:
   re-checks the Ed25519 signature via the SAME `kriya_verify::verify_envelope` `kriyad`'s own ingest
   path uses, and cross-checks chain continuity. A tampered span fails with the real reason; a genuine
   chained sequence re-verifies clean.
-- **To YOUR collector, inside YOUR boundary — never kriya's.** The export endpoint is entirely
-  operator-configured (OFF by default); enabling it signs a fleet-scoped `kriya.otel.export.enabled`
-  receipt (the same non-egress dial F3 uses, at fleet scope). kriya never hosts, proxies, or sees a
-  copy of the exported spans — the boundary-scoped promise above ("Boundary-level ... never kriya's or
-  any vendor's cloud") applies here without modification. Unlike F3's own free-tier build (which
+- **To YOUR collector, inside YOUR boundary — never kriya's, and never via the connector.** The
+  export endpoint is entirely operator-configured (OFF by default); enabling it signs a fleet-scoped
+  `kriya.otel.export.enabled` receipt (the same non-egress dial F3 uses, at fleet scope). kriya never
+  hosts, proxies, or sees a copy of the exported spans — this telemetry lane targets the customer's
+  own collector directly, distinct from the L2 evidence-transport connector above (which never
+  carries OTel spans); the **L1 boundary-level** promise ("go to a hub the customer runs — never
+  anywhere else, no kriya infra on the path") applies here without modification. Unlike F3's own free-tier build (which
   deliberately ships file-export-only, for the reason explained in the section above), this fleet lane
   DOES support a live push: it is license-gated behind `control-plane`/`fleet-console` already (the
   free tier links none of this code), so a live network call here does not touch the free-tier
