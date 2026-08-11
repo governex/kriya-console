@@ -24,7 +24,7 @@ Connect them your way — same build, same signed wire:
 |---|---|---|
 | Same machine | nothing leaves the device | solo / evaluation — free forever |
 | Direct | devices → your Console or headless hub, on your network | orgs that want zero vendor infra on the path |
-| Connector | devices → `<your-code>.console.kriyanative.com` → your Console | different networks, zero infra — the relay **verifies, buffers, and deletes on ack**; it can read no content and can forge nothing |
+| Connector | devices → `console.kriyanative.com/t/<your-code>` → your Console | different networks, zero infra — the relay **verifies evidence, buffers it, and deletes on ack**, and can forge nothing. It also holds your current org policy so a device that was offline can fetch it on return, and it can read that policy — see [TRUST](docs/TRUST.md) |
 
 ## Why it holds up in front of an auditor
 

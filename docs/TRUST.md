@@ -281,8 +281,8 @@ across a fleet):
 |---|---|---|
 | **Free / un-enrolled device** | **Machine-level: nothing leaves the device, full stop.** | No fleet connection is configured, so no socket to any server — kriyad or otherwise — is ever opened for audit/evidence purposes. This is unchanged, byte-for-byte, by anything below: the free tier's claim on this page has not been weakened or reinterpreted. |
 | **Enrolled device — L1 direct** (paid `control-plane`) | **Boundary-level: minimized, signed envelopes and the device-info beacon go to a hub the customer runs — never anywhere else, no kriya infra on the path.** | The device signs and sends redaction-minimized evidence envelopes plus the periodic `DeviceInfo` inventory beacon (§7 fields only, see below) to one server the customer stands up — their Console-as-hub, their `kriyad`, their VM/k8s/air-gapped enclave — over mTLS or server-TLS-with-token. Raw receipts and raw payload values are never included — see "Honest boundaries" above for what recording even means. This traffic never reaches kriya's infrastructure or any third party; it terminates at infrastructure the customer alone controls. |
-| **Enrolled device — L2 connector** (paid `control-plane`) | **Transit-level: the same minimized, signed envelopes pass through a kriya-operated mailbox that verifies, buffers the undelivered tail, and deletes on the operator's ack — kriya can read no content and can never forge.** | For orgs that want connectivity without standing up their own reachable hub, the device pushes the *same* minimized envelopes to a per-tenant mailbox at `<code>.console.kriyanative.com` over public-CA TLS with a device-bound bearer token. The mailbox re-verifies each Ed25519 envelope, holds only the tail the cockpit has not yet pulled, and **deletes each envelope once the cockpit acks it**. An envelope carries no raw receipts and no payload values (identical minimization to L1), so there is no content for the mailbox to read; the Ed25519 signature is the integrity root, so the mailbox — or anyone who steals its bearer token — can connect but can never forge or alter a byte the cockpit will accept. What the mailbox unavoidably handles is disclosed below. |
-| **Operator / cockpit** (paid `fleet-console`) | **Boundary-level: the cockpit reads coverage/evidence from — and publishes org-key-signed policy to — the customer's own hub (L1) or the connector mailbox (L2), re-verifying every byte it pulls; the mailbox holds nothing kriya can read.** | The fleet cockpit is the same on-device Console binary in "operator mode," not a hosted dashboard. Against an L1 hub it talks only to the customer's own server. Against an L2 mailbox it pulls signed envelopes over an operator bearer token, re-verifies each one locally with the same offline verifier this whole document describes, and acks — which is what triggers the mailbox to delete. Policy it publishes is org-key-signed and re-verified device-side before applying; kriya never authors, signs, or can alter it. |
+| **Enrolled device — L2 connector** (paid `control-plane`) | **Transit-level: the same minimized, signed envelopes pass through a kriya-operated mailbox that verifies, buffers the undelivered tail, and deletes on the operator's ack — kriya can read no content and can never forge.** | For orgs that want connectivity without standing up their own reachable hub, the device pushes the *same* minimized envelopes to a per-tenant mailbox at `console.kriyanative.com/t/<code>` over public-CA TLS with a device-bound bearer token. The mailbox re-verifies each Ed25519 envelope, holds only the tail the cockpit has not yet pulled, and **deletes each envelope once the cockpit acks it**. An envelope carries no raw receipts and no payload values (identical minimization to L1), so there is no content for the mailbox to read; the Ed25519 signature is the integrity root, so the mailbox — or anyone who steals its bearer token — can connect but can never forge or alter a byte the cockpit will accept. What the mailbox unavoidably handles is disclosed below. |
+| **Operator / cockpit** (paid `fleet-console`) | **The cockpit reads coverage/evidence from — and publishes org-key-signed policy to — the customer's own hub (L1) or the connector mailbox (L2), re-verifying every byte it pulls. On L0 and L1 nothing rests with kriya. On L2 one object rests with kriya and kriya can read it: your current org policy bundle. kriya can never author, alter, or sign one.** | The fleet cockpit is the same on-device Console binary in "operator mode," not a hosted dashboard. Against an L1 hub it talks only to the customer's own server. Against an L2 mailbox it pulls signed envelopes over an operator bearer token, re-verifies each one locally with the same offline verifier this whole document describes, and acks — which is what triggers the mailbox to delete. Policy it publishes is org-key-signed and re-verified device-side before applying; kriya never authors, signs, or can alter it. |
 
 **The through-line, restated honestly per lane — because L2 changes it, and we say so rather than
 keep a promise a hosted connector would break:**
@@ -306,18 +306,27 @@ The per-tenant mailbox (`console.kriyanative.com`) is *"just a connector — it 
 connect."* That is a verifiable claim, not marketing, because of how little the mailbox is allowed
 to be:
 
-- **Buffer, not store — structurally, on the hosted lane only.** The mailbox deletes every envelope
-  a short grace window after the cockpit acks it; the archive of record is the device's own
+- **A buffer for evidence; a single-copy distribution point for policy.** The mailbox deletes every
+  envelope a short grace window after the cockpit acks it; the archive of record is the device's own
   append-only outbox, which is never truncated. The full history lives on the customer's devices;
   the mailbox holds only the tail the cockpit has not yet collected. On a customer's own L1 hub this
   retention sweep is **off** — that hub is the permanent, queryable store — so "kriya's cloud is a
   buffer" is a property enforced in code on the hosted lane specifically, not a promise about
-  operator behavior.
-- **No content to read.** An envelope is a minimized, signed rollup: allowlisted action ids and
+  operator behavior. **Policy runs the other way and has no ack, so it is not a buffer:** the mailbox
+  holds exactly one bundle per scope you publish to — your *current* policy, never your policy
+  history — and publishing a new version deletes the one it supersedes. A device that has been
+  offline for a month must still be able to fetch the current rules when it returns, which is why
+  one copy has to stay.
+- **No evidence content to read — your policy bundle is the one exception.** An envelope is a
+  minimized, signed rollup: allowlisted action ids and
   counts, chain hashes, the device's public key. No raw receipts, no payload values, no request/
   response bodies ever enter it (the minimizer forecloses this structurally at every verbosity — see
-  the redaction floor above). The mailbox verifies signatures and buffers bytes; there is no
-  plaintext for it to inspect even if it tried.
+  the redaction floor above). The mailbox verifies signatures and buffers bytes; for evidence there
+  is no plaintext for it to inspect even if it tried. **The exception, named rather than buried: the
+  org policy bundle you publish for distribution to your own fleet is plaintext, and kriya can read
+  it.** What that bundle contains is listed under "What it unavoidably handles" below. It is
+  configuration you asked us to hand out, never observation of your people — and kriya can still
+  never author, alter or sign one, because the signing key never leaves your authoring machine.
 - **Cannot forge.** Every envelope is Ed25519-signed by the device; the cockpit re-verifies each one
   after pulling it. A mailbox — or an attacker who steals a device's bearer token — can connect and
   push, but a forged or altered envelope fails verification at the cockpit and is flagged, exactly
@@ -326,14 +335,28 @@ to be:
 - **What it unavoidably handles, disclosed:** any TCP connection reveals the device's **source IP**
   to the server — the mailbox, like `kriyad`, does **not** persist it to the store (verified in code,
   the same as the L1 hub); connection **timing** and **volume** are visible to any relay by nature;
-  and **tenant identity** is visible by design (the company-code subdomain is how the wire is
-  routed). None of these is content; all of them are the honest cost of a hosted connector, stated
-  rather than glossed.
-- **Not yet operating.** No hosted tenant is live as of this writing — the connector lane is built
-  and tested, but the production route and the first tenant are gated on the remaining rollout steps
-  (a rehearsed backup+restore, this per-lane disclosure's founder sign-off, and the DNS/edge route).
-  This section describes a capability that ships **before** the first tenant, not one already
-  carrying traffic.
+  and **tenant identity** is visible by design (the tenant path is how the wire is routed). Beyond
+  the connection itself, these things rest on kriya-operated infrastructure until you remove them:
+  - **The current policy bundle you publish, in the clear, until you supersede it** — your rules and
+    approval gates, egress host patterns, internal API paths, tool and MCP server names, secret
+    *aliases* (never secret values), spend thresholds, business-unit names, per-identity pack
+    assignments, and any purpose statement you wrote. **If you use canary tokens, note that their
+    value is secrecy and they would rest here in the clear** — keep them out of an L2-published
+    bundle, or run L1. Superseded versions are deleted on publish; encrypted backup snapshots may
+    still contain them for their retention window.
+  - **The device roster and inventory** — which devices are enrolled, their public keys, the labels
+    you gave them, and each device's periodic beacon (OS version, which AI agents are installed and
+    whether they are governed, applied policy version). This is how coverage works, and it is not
+    swept.
+  - **The heartbeat log and the ack cursors**, both append-only, and the **enrollment/device-token
+    roster** (argon2id hashes, never the tokens) plus your org licence.
+
+  None of this is agent activity, and none of it is a payload value, a receipt, a secret value, or
+  your signing key. All of it is the honest cost of a hosted connector, stated rather than glossed —
+  and **L1 avoids every line of it**, which is exactly why L1 exists.
+- **Operating status.** The connector lane is live: kriya's own tenant zero runs on it, and this
+  section describes a lane carrying real traffic rather than a planned one. Tenants are addressed by
+  path (`console.kriyanative.com/t/<code>`), not by subdomain.
 
 **Why this doesn't undercut the ops story** — and why it makes the L2 claim *stronger*, not weaker.
 Raw receipts and raw payload values stay device-local on every lane — not merely as a courtesy, but
@@ -1285,7 +1308,10 @@ the launch attestation — and then execs the agent command. Read what that one 
 
 For local and regulated apps, the audit cannot live in a cloud gateway — the data and the human are
 on the device, and so the proof must be too. kriya Console verifies and aggregates **on your
-machine**: the receipts, the policy, and the evidence export never leave it. That is the posture
+machine**: the receipts and the evidence export never leave it. Your policy is signed there too —
+on L0 it never leaves; on L1 it goes only to a hub you run; on L2 it is distributed through a
+kriya-operated mailbox, which is the one thing that lane costs you (see the connector section).
+That is the posture
 EU AI Act record-keeping and SOC 2 monitoring expect when an agent touches real data, in exactly the
 place a cloud MCP gateway structurally cannot reach.
 

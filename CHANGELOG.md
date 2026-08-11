@@ -32,11 +32,22 @@ the hub roster; devices carry no licence file and never phone home.
 - **The connector lane** — device push over bearer tokens, `POST /v1/enroll` with argon2id enrollment
   codes and seat caps, mailbox ack + delete-after-ack retention, and a TLS+token serve mode for a
   direct hub without a certificate ceremony.
+- **Org policy distributes over the connector.** The cockpit publishes an org-key-signed bundle to
+  its tenant mailbox and devices poll it back, so "author once, enforced fleet-wide" now holds on the
+  connector lane and not only on-device or against a hub you run. The device enforces the bundle's
+  scope itself (it was previously applied only by whoever served it), the mailbox keeps your current
+  policy rather than your policy history, and a bundle published to the wrong tenant is refused
+  rather than stored. Disclosure: on this lane kriya can read the policy you publish — it can never
+  author, alter or sign one, and reads no agent activity. See `docs/TRUST.md`.
 - **The cockpit machine pairs itself** — it enrolls its own K-Apter against the hub it already uses;
   no code to type on the machine that mints them.
 
 **Fixed**
 
+- A connector tenant that pinned no org policy key handed devices no trust anchor at enrollment, so
+  they never fetched policy and fell back to the permissive built-in default — enrolled, reported as
+  current, and effectively ungoverned. Enrollment now carries the anchor, and the install guide's
+  acceptance test checks for it before any device is enrolled.
 - An already-wired config never picked up a new approval mode, so a machine set up before K-Apter
   existed kept drawing the `osascript` window forever. It now self-heals on the watch tick, and
   touches only kriya's own wiring.
