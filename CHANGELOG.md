@@ -3,6 +3,59 @@
 All notable changes to the Console and the `kriyad` control plane. Dates are release dates of the
 signed, notarized macOS DMG unless noted.
 
+## v0.6.9 — 2026-08-12 — One hub per org (K-Apter 0.1.8)
+
+**The rethink (founder, 2026-08-11).** The kriya-hosted tenant stops being a transit mailbox bolted
+next to the org's real hub and **becomes the org's hub** — the same binary, hosted per tenant as
+**Diplo** (`DIPLO_HOSTED_HUB=1`): permanent per-tenant store on its own volume, activity records
+served, policy publish, enrollment. One hub per org; the only question is who hosts it. The Console
+is now a pure interface over whichever hub the org points it at — which is what clears the path to a
+webapp Console. The stricter transit-only mailbox posture survives as a per-tenant opt-in, unchanged,
+for orgs that want kriya holding nothing at rest. Disclosed in TRUST.md; invariants re-scoped in
+DESIGN.md §5.
+
+**Added**
+
+- **Diplo hosted-hub serve mode** (`DIPLO_HOSTED_HUB=1`) — full hub semantics behind the tenant
+  edge; refuses to start without a token store; banner states the store posture plainly. `DIPLO_*`
+  env names now work everywhere (`KRIYAD_*` still accepted; the binary also ships as `diplo`).
+- **Two-lane pairing in K-Apter** — *Our own server* (hostname/IP inside the org's network; zero
+  kriya in the path) or *Kriya-hosted* (company code + enrollment code). The form says which lane
+  needs what.
+- **Open enrollment** (`DIPLO_OPEN_ENROLL=1`, own-hub lanes only) — a device joins by hostname
+  alone, no code; the licence seat cap is the limit; the roster records the join path
+  (`enrolled_via: "open"`). Default off. Kriya-hosted lanes always require codes.
+- **Mint enrollment codes from the Console, against the connected hub** — new operator-gated
+  `POST /v1/enroll-codes`; the cockpit mints remotely first and falls back to its embedded hub,
+  labelling which hub issued the code.
+- **Detail records over the connector, per-tenant opt-in** (`DIPLO_RECORDS_RELAY=1`, mailbox
+  posture only — a hub serves records inherently): fixes fleet Audit/Sessions/Memory/Spend staying
+  empty for connector-only orgs. Agent parameters remain structurally absent (stripped on-device
+  before signing).
+
+**Cockpit — the fleet dimension actually renders (2026-08-12)**
+
+- **Every record-shaped view works for any device in the fleet, not just the host.** Pick another
+  machine in the device picker and Audit (with its full filter bar), Sessions, Shift, Spend and
+  Memory render their REAL bodies over that device's records — the projections are standard signed
+  receipts, so they flow through the same verify-and-parse path as local receipts, re-verified row
+  by row in the cockpit. Previously a fleet device fell back to one generic activity list, so the
+  audit filters simply weren't there. Coverage additionally shows that device's reported facts
+  (status · agents wired · policy version · last seen). Agent parameters stay absent by
+  construction — that is the product's claim, and the columns say so rather than inventing content.
+- **The roster moved to the Devices page** — seats, enrollment codes, mint and revoke. It was
+  previously rendered only inside "Fleet correlation", a view with no sidebar entry, which made
+  "mint a code for a new device" unfindable in practice.
+- **The Devices page's nested Policy tab is gone** (Policy is a left-nav pillar; the tab duplicated
+  it). The Evidence tab stays.
+
+**K-Apter 0.1.8 (UX pass)**
+
+- Menu-bar glyph rendered at its full slot (~20 pt) and a larger app-icon mark; rounded popover
+  corners with a real shadow (native layer mask — no private API); the panel folds when you click
+  anywhere else, Esc closes it; approvals promoted to the top; humanized action names and relative
+  times; identity demoted to a reference block; Return submits pairing.
+
 ## v0.6.8 — 2026-08-10 — Two binaries, one signed wire (K-Apter 0.1.7)
 
 The first public cut of the **two-binary** model, and the first release since v0.5.0 — the whole

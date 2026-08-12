@@ -300,6 +300,29 @@ keep a promise a hosted connector would break:**
   reachable hub; L2 = zero customer infrastructure on the path, at the cost of the undelivered tail
   transiting a kriya-operated buffer that holds it briefly and reads none of it.
 
+### The two kriya-hosted postures — hosted hub (default) and transit-only mailbox
+
+As of 2026-08-11 a kriya-hosted tenant runs in one of two postures, and which one is a per-tenant
+fact its startup banner states:
+
+- **Hosted hub** (`DIPLO_HOSTED_HUB=1`, the default offering): the per-tenant deployment IS the
+  org's hub — the same binary, byte-identical routes and gates, as the hub a customer would run
+  on-prem. **kriya stores the tenant's minimized, signed metadata at rest**: envelopes (allowlisted
+  action ids, counts, chain hashes, device keys), the detail projections (action ids, outcomes,
+  pseudonymous actors, timings — never agent parameters, which are stripped on-device before
+  signing), the device roster, and the current policy bundle. Stored on a per-tenant volume,
+  operator-token gated, Ed25519-verified at ingest and re-verified by the cockpit on read — kriya
+  can hold the bytes and can never forge one. This is the posture that makes the Console a pure
+  interface (and later a webapp): one hub per org, and the only question is who hosts it.
+- **Transit-only mailbox** (`KRIYAD_HOSTED=1`, the stricter opt-in): everything the rest of this
+  section describes — buffer-not-store retention, records 404'd by default, kriya holding only the
+  undelivered tail. For tenants whose posture requires that kriya-operated infrastructure store
+  nothing at rest, at the cost of the cockpit having to pull-and-ack and of no webapp ever serving
+  their data.
+
+On-prem (the org's own hub, whatever the transport lane) is unchanged by all of this: zero egress to
+kriya, licence as an offline file, no phone-home — structurally.
+
 ### The connector cloud (L2) — what the mailbox does, does not, and cannot see
 
 The per-tenant mailbox (`console.kriyanative.com`) is *"just a connector — it helps the two pieces
@@ -327,6 +350,22 @@ to be:
   it.** What that bundle contains is listed under "What it unavoidably handles" below. It is
   configuration you asked us to hand out, never observation of your people — and kriya can still
   never author, alter or sign one, because the signing key never leaves your authoring machine.
+- **Detail records: blocked by default, relayed only if you turn them on.** Separately from envelopes,
+  a device produces **detail records** — one content-free *projection* per audit receipt (action id,
+  success, timestamp, the actor as a peppered pseudonym, a hashed session handle, and for the
+  `kriya.*` governance vocabulary its params). These are what fill the cockpit's Audit, Sessions,
+  Memory and Spend views. On the connector they are **404'd in both directions by default**: a device
+  cannot push them into a kriya-operated buffer and an operator cannot read any out of it, so the
+  "kriya carries no observation of your people" claim is structural, not a policy. The cost of that
+  default is real and worth stating: an org whose devices reach the cockpit *only* over the connector
+  sees devices, seats and coverage populate while every detail view stays empty. An operator who
+  wants those views can therefore opt **their own tenant** in (`KRIYAD_RECORDS_RELAY=1`), and the
+  honest consequence is that kriya-operated infrastructure then buffers per-employee activity
+  *metadata* — never content: agent parameters (commands, file contents, prompts) are removed on the
+  device before the projection is signed, so the relay cannot carry them whatever the setting. The
+  same buffer-not-store retention and the same operator-only read apply. **Default off; on is a
+  disclosure you choose, and this paragraph is what you are choosing.** On a customer's own hub
+  (L1/on-prem) the route is always served — that hub is your infrastructure, not ours.
 - **Cannot forge.** Every envelope is Ed25519-signed by the device; the cockpit re-verifies each one
   after pulling it. A mailbox — or an attacker who steals a device's bearer token — can connect and
   push, but a forged or altered envelope fails verification at the cockpit and is flagged, exactly
